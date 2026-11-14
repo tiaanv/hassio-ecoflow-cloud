@@ -200,6 +200,17 @@ class GlacierClassicTemperatureUnitSensorEntity(MiscSensorEntity):
         return super()._update_value(label)
 
 
+class GlacierClassicTemperatureUnitRawSensorEntity(MiscSensorEntity):
+    """Expose the raw unit value with an identity separate from its readable label."""
+
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
+
+    def __init__(self, client: EcoflowApiClient, device: BaseDevice):
+        super().__init__(client, device, "pd.tmpUnit", "Temperature Unit Raw", False)
+        # Both sensors read pd.tmpUnit; only their registry identities differ.
+        self._attr_unique_id = self._gen_unique_id(device.device_data.sn, "pd.tmpUnit.raw")
+
+
 class InvertedMiscBinarySensorEntity(MiscBinarySensorEntity):
     """Binary sensor entity with inverted device semantics."""
 
@@ -331,7 +342,7 @@ class GlacierClassic(BaseInternalDevice):
             LevelSensorEntity(client, self, "bms_bmsStatus.actSoc", "Actual Battery SOC", False),
             LevelSensorEntity(client, self, "bms_bmsStatus.diffSoc", "Battery SOC Delta", False),
             LevelSensorEntity(client, self, "bms_bmsStatus.targetSoc", "Target Battery SOC", False),
-            MiscSensorEntity(client, self, "pd.blTime", "Screen Off Time").with_category(EntityCategory.CONFIG),
+            MiscSensorEntity(client, self, "pd.blTime", "Screen Off Time").with_category(EntityCategory.DIAGNOSTIC),
             MiscSensorEntity(client, self, "pd.devStandbyTime", "Device Standby Time", False),
             MiscSensorEntity(
                 client,
@@ -374,7 +385,7 @@ class GlacierClassic(BaseInternalDevice):
             MiscSensorEntity(client, self, "diag.openBmsIdx", "Open BMS Index", False),
             MiscSensorEntity(client, self, "diag.maxAvailableNum", "Max Available Modules", False),
             GlacierClassicTemperatureUnitSensorEntity(client, self, "pd.tmpUnit", "Temperature Unit", False),
-            MiscSensorEntity(client, self, "pd.tmpUnit", "Temperature Unit Raw", False),
+            GlacierClassicTemperatureUnitRawSensorEntity(client, self),
             QuotaStatusSensorEntity(client, self),
             GlacierClassicDebugSensorEntity(client, self),
         ]
